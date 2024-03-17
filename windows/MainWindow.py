@@ -1,12 +1,4 @@
-import tkinter.ttk as ttk
-
-from components.ModuleSearchBar import ModuleSearchBar
-from components.ServerUrlBar import ServerUrlBar
-from components.StatusBar import StatusBar
-from components.SettingsBar import SettingsBar
-
-from utils.Window import StatefulWindow
-from utils.XBee import XBee
+import dearpygui.dearpygui as dpg
 
 
 class MainWindow(StatefulWindow):
