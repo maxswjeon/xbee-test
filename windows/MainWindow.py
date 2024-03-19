@@ -2,7 +2,9 @@ import wx
 
 import ctypes
 from threading import Thread, Lock, Condition, Event
+from urllib.parse import urlparse, urlunparse
 
+import requests
 import serial.tools.list_ports
 from digi.xbee.devices import XBeeDevice
 
@@ -20,6 +22,8 @@ class MainWindow(BaseMainWindow):
         self.thread_queue = []
 
         self.device = None
+        self.server = None
+        self.metadata = {"module_id": "", "distance": "", "notes": ""}
 
         self.button_metadata_save.Disable()
         self.button_metadata_reset.Disable()
@@ -67,6 +71,9 @@ class MainWindow(BaseMainWindow):
         self.thread.start()
 
     def _on_close(self, evt):
+        if self.device:
+            self.device.close()
+
         self.thread_kill.set()
         with self.thread_wait:
             self.thread_wait.notify()
@@ -93,13 +100,23 @@ class MainWindow(BaseMainWindow):
         self.button_refresh.Disable()
         self.combobox_serial.Disable()
         self.button_serial.SetLabelText("Connecting")
+        self.button_serial.Disable()
 
         port = self.ports[self.combobox_serial.GetSelection()].device
         self.background(lambda: self.serial_connect(port))
 
     def _on_button_server(self, evt):
-        print("Connecting to server")
-        self.background(self.__on_button_server)
+        if self.server is not None:
+            self.server = None
+            self.button_server.SetLabelText("Connect")
+            self.textbox_server.Enable()
+            return
+        self.button_server.SetLabelText("Connecting")
+        self.button_server.Disable()
+        self.textbox_server.Disable()
+
+        url = self.textbox_server.GetValue()
+        self.background(lambda: self.server_connect(url))
 
     def _on_button_metadata_save(self, evt):
         print("Saving metadata")
@@ -123,8 +140,8 @@ class MainWindow(BaseMainWindow):
 
     def serial_connect(self, port):
         try:
-            self.device = XBeeDevice()
-            self.device.open(port, 9600)
+            self.device = XBeeDevice(port, 9600)
+            self.device.open()
         except:
             wx.MessageDialog(
                 self,
@@ -139,3 +156,29 @@ class MainWindow(BaseMainWindow):
 
             self.device = None
             return
+
+        self.button_serial.SetLabelText("Disconnect")
+        self.button_serial.Enable()
+
+    def server_connect(self, url):
+        try:
+            if url.endswith("/"):
+                url = url[:-1]
+            self.server = url
+            url = url + "/-/healthy"
+
+            response = requests.get(url)
+            response.raise_for_status()
+        except:
+            wx.MessageDialog(
+                self,
+                "Failed to connect to server",
+                "Error",
+                wx.OK | wx.CENTER | wx.ICON_ERROR,
+            ).ShowModal()
+
+            self.server = None
+            return
+
+        self.button_server.SetLabelText("Disconnect")
+        self.button_server.Enable()

@@ -135,12 +135,12 @@ class BaseMainWindow (wx.Frame):
 
 		self.stats = []
 		for _ in range(6):
-			label = wx.StaticText(self, wx.ID_ANY, u"MyLabel", wx.DefaultPosition, wx.DefaultSize, 0)
+			label = wx.StaticText(self, wx.ID_ANY, u"", wx.DefaultPosition, wx.DefaultSize, 0)
 			label.Wrap(-1)
 
 			sizer_stats.Add(label, 0, wx.ALL, 5)
 			
-			text = wx.StaticText(self, wx.ID_ANY, u"MyLabel", wx.DefaultPosition, wx.DefaultSize, 0)
+			text = wx.StaticText(self, wx.ID_ANY, u"", wx.DefaultPosition, wx.DefaultSize, 0)
 			text.Wrap(-1)
 
 			sizer_stats.Add(text, 0, wx.ALL, 5)
